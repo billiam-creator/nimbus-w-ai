@@ -20,6 +20,18 @@ String _toStr(dynamic v) {
   return v.toString();
 }
 
+bool _computeIsDay(Map<String, dynamic> c) {
+  final timeStr = c['time']?.toString() ?? '';
+  final dt = DateTime.tryParse(timeStr) ?? DateTime.now();
+  final hour = dt.hour;
+
+  if (hour >= 20 || hour < 6) return false;
+  if (hour >= 7 && hour < 18) return true;
+
+  // Dawn/dusk — fall back to API value
+  return _toInt(c['is_day'] ?? 1) == 1;
+}
+
 // ─── Current ─────────────────────────────────────────────────────────────────
 
 class CurrentWeatherModel {
@@ -54,16 +66,17 @@ class CurrentWeatherModel {
           c['temp'] ?? c['temperature'] ?? c['temperature_2m'] ?? c['temp_c']),
       feelsLike: _toDouble(
           c['feels_like'] ?? c['feelsLike'] ?? c['apparent_temperature']),
-      humidity:
-          _toInt(c['humidity'] ?? c['humidity_pct'] ?? c['relative_humidity_2m']),
+      humidity: _toInt(
+          c['humidity'] ?? c['humidity_pct'] ?? c['relative_humidity_2m']),
       windSpeed: _toDouble(
           c['wind'] ?? c['wind_kph'] ?? c['wind_speed'] ?? c['wind_speed_10m']),
-      weatherCode:
-          _toInt(c['weather_code'] ?? c['weathercode'] ?? c['weatherCode'] ?? 0),
-      isDay: _toInt(c['is_day'] ?? 1) == 1,
+      weatherCode: _toInt(
+          c['weather_code'] ?? c['weathercode'] ?? c['weatherCode'] ?? 0),
+      isDay: _computeIsDay(c),
       uvIndex: _toDouble(c['uv_index'] ?? c['uvIndex']),
       precipitation: _toDouble(c['precipitation']),
-      visibility: _toInt(c['visibility']) == 0 ? 10000 : _toInt(c['visibility']),
+      visibility:
+          _toInt(c['visibility']) == 0 ? 10000 : _toInt(c['visibility']),
       time: _toStr(c['time'] ?? DateTime.now().toIso8601String()),
     );
   }
@@ -96,14 +109,24 @@ class DailyForecastModel {
     final m = d is Map<String, dynamic> ? d : <String, dynamic>{};
     return DailyForecastModel(
       date: _toStr(m['date'] ?? m['day'] ?? m['time'] ?? m['dt_txt']),
-      tempMax: _toDouble(m['high'] ?? m['max'] ?? m['temp_max'] ??
-          m['temperature_max'] ?? m['maxtemp_c'] ?? m['temperature_2m_max']),
-      tempMin: _toDouble(m['low'] ?? m['min'] ?? m['temp_min'] ??
-          m['temperature_min'] ?? m['mintemp_c'] ?? m['temperature_2m_min']),
+      tempMax: _toDouble(m['high'] ??
+          m['max'] ??
+          m['temp_max'] ??
+          m['temperature_max'] ??
+          m['maxtemp_c'] ??
+          m['temperature_2m_max']),
+      tempMin: _toDouble(m['low'] ??
+          m['min'] ??
+          m['temp_min'] ??
+          m['temperature_min'] ??
+          m['mintemp_c'] ??
+          m['temperature_2m_min']),
       weatherCode: _toInt(
           m['weather_code'] ?? m['weathercode'] ?? m['weatherCode'] ?? 0),
-      precipitationProbability: _toDouble(m['pop'] ?? m['precip_probability'] ??
-          m['chance_of_rain'] ?? m['precipitation_probability_max'] ??
+      precipitationProbability: _toDouble(m['pop'] ??
+          m['precip_probability'] ??
+          m['chance_of_rain'] ??
+          m['precipitation_probability_max'] ??
           m['precipitation_probability']),
       uvIndexMax:
           _toDouble(m['uv_index_max'] ?? m['uvIndex'] ?? m['uv_index']),
@@ -115,7 +138,6 @@ class DailyForecastModel {
   static List<DailyForecastModel> listFromJson(dynamic raw) {
     if (raw == null) return [];
     if (raw is List) return raw.map(DailyForecastModel.fromMap).toList();
-    // columnar map format
     if (raw is Map<String, dynamic>) {
       final times = raw['time'];
       if (times is List) {
@@ -124,13 +146,15 @@ class DailyForecastModel {
             final v = raw[key];
             return v is List && i < v.length ? v[i] : null;
           }
+
           return DailyForecastModel(
             date: _toStr(times[i]),
             tempMax: _toDouble(get('temperature_2m_max') ?? get('temp_max')),
             tempMin: _toDouble(get('temperature_2m_min') ?? get('temp_min')),
-            weatherCode: _toInt(get('weather_code') ?? get('weathercode')),
-            precipitationProbability:
-                _toDouble(get('precipitation_probability_max') ?? get('pop')),
+            weatherCode:
+                _toInt(get('weather_code') ?? get('weathercode')),
+            precipitationProbability: _toDouble(
+                get('precipitation_probability_max') ?? get('pop')),
             uvIndexMax: _toDouble(get('uv_index_max')),
             sunrise: _toStr(get('sunrise')),
             sunset: _toStr(get('sunset')),
@@ -169,8 +193,8 @@ class HourlyForecastModel {
           m['temp'] ?? m['temperature'] ?? m['temp_c'] ?? m['temperature_2m']),
       weatherCode: _toInt(
           m['weather_code'] ?? m['weathercode'] ?? m['weatherCode'] ?? 0),
-      humidity:
-          _toInt(m['humidity'] ?? m['humidity_pct'] ?? m['relative_humidity_2m']),
+      humidity: _toInt(
+          m['humidity'] ?? m['humidity_pct'] ?? m['relative_humidity_2m']),
       windSpeed: _toDouble(
           m['wind'] ?? m['wind_kph'] ?? m['wind_speed'] ?? m['wind_speed_10m']),
       precipitation: _toDouble(m['precipitation'] ?? m['pop']),
@@ -188,12 +212,15 @@ class HourlyForecastModel {
             final v = raw[key];
             return v is List && i < v.length ? v[i] : null;
           }
+
           return HourlyForecastModel(
             time: _toStr(times[i]),
             temperature:
                 _toDouble(get('temperature_2m') ?? get('temperature')),
-            weatherCode: _toInt(get('weather_code') ?? get('weathercode')),
-            humidity: _toInt(get('relative_humidity_2m') ?? get('humidity')),
+            weatherCode:
+                _toInt(get('weather_code') ?? get('weathercode')),
+            humidity:
+                _toInt(get('relative_humidity_2m') ?? get('humidity')),
             windSpeed:
                 _toDouble(get('wind_speed_10m') ?? get('wind_speed')),
             precipitation: _toDouble(get('precipitation')),
@@ -272,7 +299,9 @@ class WeatherResponseModel {
           json['summary'] as String? ??
           json['aiSummary'] as String? ??
           json['insights'] as String? ??
-          (json['ai'] is Map ? _toStr((json['ai'] as Map)['summary']) : null);
+          (json['ai'] is Map
+              ? _toStr((json['ai'] as Map)['summary'])
+              : null);
 
       return WeatherResponseModel(
         current: CurrentWeatherModel.fromJson(json['current'] ?? json),

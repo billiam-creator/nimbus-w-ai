@@ -7,11 +7,8 @@ import 'package:nimbus/presentation/theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Load .env
   await dotenv.load(fileName: '.env');
 
-  // Portrait only
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
@@ -20,22 +17,24 @@ Future<void> main() async {
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
+      statusBarIconBrightness: Brightness.dark,
     ),
   );
 
-  runApp(const ProviderScope(child: SkyCastApp()));
+  runApp(const ProviderScope(child: NimbusApp()));
 }
 
-class SkyCastApp extends StatelessWidget {
-  const SkyCastApp({super.key});
+class NimbusApp extends StatelessWidget {
+  const NimbusApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'SkyCast',
+      title: 'Nimbus',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark,
+      theme: AppTheme.light,
+      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.system,
       home: const HomePage(),
     );
   }

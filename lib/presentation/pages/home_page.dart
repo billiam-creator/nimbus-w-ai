@@ -7,8 +7,7 @@ import 'package:nimbus/presentation/widgets/current_weather_card.dart';
 import 'package:nimbus/presentation/widgets/daily_forecast_section.dart';
 import 'package:nimbus/presentation/widgets/hourly_forecast_section.dart';
 import 'package:nimbus/presentation/widgets/loading_skeleton.dart';
-import 'package:nimbus/presentation/widgets/search_bar_widget.dart'
-    as search;
+import 'package:nimbus/presentation/widgets/search_bar_widget.dart' as search;
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -29,17 +28,30 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(weatherProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A1628),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
-            // Search bar always visible
-            const search.SearchBar(),
+            // Search bar with clean separation
+            Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: const search.SearchBar(),
+            ),
 
             Expanded(
-              child: _buildBody(state),
+              child: _buildBody(state, isDark),
             ),
           ],
         ),
@@ -47,7 +59,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  Widget _buildBody(WeatherState state) {
+  Widget _buildBody(WeatherState state, bool isDark) {
     switch (state.status) {
       case WeatherStatus.initial:
       case WeatherStatus.loading:
@@ -63,7 +75,8 @@ class _HomePageState extends ConsumerState<HomePage> {
         final weather = state.data!;
         return RefreshIndicator(
           color: const Color(0xFF64B5F6),
-          backgroundColor: const Color(0xFF142038),
+          backgroundColor:
+              isDark ? const Color(0xFF142038) : Colors.white,
           onRefresh: () => ref.read(weatherProvider.notifier).refresh(),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -78,7 +91,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
 
                 // AI Summary
-                if (weather.aiSummary != null && weather.aiSummary!.isNotEmpty)
+                if (weather.aiSummary != null &&
+                    weather.aiSummary!.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 16),
                     child: AiSummaryCard(summary: weather.aiSummary!),
@@ -101,6 +115,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 // Units toggle + attribution
                 _Footer(
                   units: state.units,
+                  isDark: isDark,
                   onToggleUnits: () =>
                       ref.read(weatherProvider.notifier).toggleUnits(),
                 ),
@@ -122,6 +137,7 @@ class _ErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -134,7 +150,10 @@ class _ErrorView extends StatelessWidget {
             const SizedBox(height: 24),
             Text(
               message,
-              style: const TextStyle(color: Colors.white70, fontSize: 16),
+              style: TextStyle(
+                color: isDark ? Colors.white70 : Colors.black54,
+                fontSize: 16,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
@@ -160,9 +179,14 @@ class _ErrorView extends StatelessWidget {
 
 class _Footer extends StatelessWidget {
   final String units;
+  final bool isDark;
   final VoidCallback onToggleUnits;
 
-  const _Footer({required this.units, required this.onToggleUnits});
+  const _Footer({
+    required this.units,
+    required this.isDark,
+    required this.onToggleUnits,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -171,32 +195,48 @@ class _Footer extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Units toggle
           GestureDetector(
             onTap: onToggleUnits,
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: const Color(0xFF142038),
+                color: isDark
+                    ? const Color(0xFF142038)
+                    : Colors.white,
                 borderRadius: BorderRadius.circular(20),
+                boxShadow: isDark
+                    ? []
+                    : [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.06),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        )
+                      ],
               ),
               child: Row(
                 children: [
-                  _UnitLabel('°C', units == 'metric'),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 6),
-                    child: Text('/', style: TextStyle(color: Colors.white38)),
+                  _UnitLabel('°C', units == 'metric', isDark),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6),
+                    child: Text(
+                      '/',
+                      style: TextStyle(
+                        color: isDark ? Colors.white38 : Colors.black26,
+                      ),
+                    ),
                   ),
-                  _UnitLabel('°F', units == 'imperial'),
+                  _UnitLabel('°F', units == 'imperial', isDark),
                 ],
               ),
             ),
           ),
-          // Attribution
-          const Text(
+          Text(
             'Powered by WeatherAI',
-            style: TextStyle(color: Colors.white24, fontSize: 11),
+            style: TextStyle(
+              color: isDark ? Colors.white24 : Colors.black26,
+              fontSize: 11,
+            ),
           ),
         ],
       ),
@@ -207,15 +247,18 @@ class _Footer extends StatelessWidget {
 class _UnitLabel extends StatelessWidget {
   final String text;
   final bool active;
+  final bool isDark;
 
-  const _UnitLabel(this.text, this.active);
+  const _UnitLabel(this.text, this.active, this.isDark);
 
   @override
   Widget build(BuildContext context) {
     return Text(
       text,
       style: TextStyle(
-        color: active ? Colors.white : Colors.white38,
+        color: active
+            ? (isDark ? Colors.white : Colors.black87)
+            : (isDark ? Colors.white38 : Colors.black38),
         fontWeight: active ? FontWeight.w700 : FontWeight.w400,
         fontSize: 14,
       ),

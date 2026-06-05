@@ -17,6 +17,11 @@ class DailyForecastSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final tempUnit = units == 'metric' ? '°' : '°';
     final displayForecast = forecast.skip(1).take(6).toList();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isDark ? const Color(0xFF142038) : Colors.white;
+    final dividerColor = isDark
+        ? Colors.white.withOpacity(0.06)
+        : Colors.black.withOpacity(0.06);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -31,15 +36,24 @@ class DailyForecastSection extends StatelessWidget {
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: const Color(0xFF142038),
+            color: cardColor,
             borderRadius: BorderRadius.circular(20),
+            boxShadow: isDark
+                ? []
+                : [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.06),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    )
+                  ],
           ),
           child: ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: displayForecast.length,
             separatorBuilder: (_, __) => Divider(
-              color: Colors.white.withOpacity(0.06),
+              color: dividerColor,
               height: 1,
               indent: 16,
               endIndent: 16,
@@ -50,6 +64,7 @@ class DailyForecastSection extends StatelessWidget {
                 day: day,
                 tempUnit: tempUnit,
                 index: index,
+                isDark: isDark,
               );
             },
           ),
@@ -63,61 +78,61 @@ class _DayRow extends StatelessWidget {
   final DailyForecastModel day;
   final String tempUnit;
   final int index;
+  final bool isDark;
 
   const _DayRow({
     required this.day,
     required this.tempUnit,
     required this.index,
+    required this.isDark,
   });
 
   @override
   Widget build(BuildContext context) {
+    final dayTextColor = isDark ? Colors.white70 : Colors.black87;
+    final minTempColor = isDark ? Colors.white38 : Colors.black38;
+    final maxTempColor = isDark ? Colors.white : Colors.black87;
+    final rainColor =
+        isDark ? const Color(0xFF64B5F6) : const Color(0xFF1976D2);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       child: Row(
         children: [
-          // Day name
           SizedBox(
             width: 48,
             child: Text(
               WeatherUtils.formatShortDay(day.date),
-              style: const TextStyle(
-                color: Colors.white70,
+              style: TextStyle(
+                color: dayTextColor,
                 fontWeight: FontWeight.w500,
                 fontSize: 14,
               ),
             ),
           ),
-          // Weather emoji
           Text(
-            WeatherUtils.codeToEmoji(day.weatherCode),
+            WeatherUtils.codeToEmoji(day.weatherCode, isDay: true),
             style: const TextStyle(fontSize: 20),
           ),
           const SizedBox(width: 8),
-          // Rain chance
           if (day.precipitationProbability > 0) ...[
-            const Icon(Icons.water_drop, size: 12, color: Color(0xFF64B5F6)),
+            Icon(Icons.water_drop, size: 12, color: rainColor),
             const SizedBox(width: 2),
             Text(
               '${day.precipitationProbability.round()}%',
-              style: const TextStyle(
-                color: Color(0xFF64B5F6),
-                fontSize: 12,
-              ),
+              style: TextStyle(color: rainColor, fontSize: 12),
             ),
           ],
           const Spacer(),
-          // Min/max temp
           Text(
             '${day.tempMin.round()}$tempUnit',
-            style: const TextStyle(
-              color: Colors.white38,
+            style: TextStyle(
+              color: minTempColor,
               fontSize: 14,
               fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(width: 8),
-          // Temp bar
           _TempBar(
             min: day.tempMin,
             max: day.tempMax,
@@ -127,8 +142,8 @@ class _DayRow extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             '${day.tempMax.round()}$tempUnit',
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: maxTempColor,
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
@@ -155,7 +170,6 @@ class _TempBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final range = globalMax - globalMin;
-    final startFrac = ((min - globalMin) / range).clamp(0.0, 1.0);
     final endFrac = ((max - globalMin) / range).clamp(0.0, 1.0);
 
     return SizedBox(
@@ -165,7 +179,7 @@ class _TempBar extends StatelessWidget {
         borderRadius: BorderRadius.circular(2),
         child: Stack(
           children: [
-            Container(color: Colors.white12),
+            Container(color: Colors.black12),
             FractionallySizedBox(
               alignment: Alignment.centerLeft,
               widthFactor: endFrac,

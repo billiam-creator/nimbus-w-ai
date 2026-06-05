@@ -4,91 +4,97 @@ import 'package:google_fonts/google_fonts.dart';
 class AppTheme {
   AppTheme._();
 
+  // Shared colors
   static const Color _primaryBlue = Color(0xFF2196F3);
-  static const Color _deepBlue = Color(0xFF0D47A1);
+
+  // Dark colors
   static const Color _surfaceDark = Color(0xFF0A1628);
   static const Color _cardDark = Color(0xFF142038);
-  static const Color _textPrimary = Color(0xFFECF0F1);
-  static const Color _textSecondary = Color(0xFFB0BEC5);
+  static const Color _textPrimaryDark = Color(0xFFECF0F1);
+  static const Color _textSecondaryDark = Color(0xFFB0BEC5);
 
-  static ThemeData get dark {
+  // Light colors
+  static const Color _surfaceLight = Color(0xFFF0F4FF);
+  static const Color _cardLight = Color(0xFFFFFFFF);
+  static const Color _textPrimaryLight = Color(0xFF1A237E);
+  static const Color _textSecondaryLight = Color(0xFF546E7A);
+
+  static ThemeData get dark => _build(Brightness.dark);
+  static ThemeData get light => _build(Brightness.light);
+
+  static ThemeData _build(Brightness brightness) {
+    final isDark = brightness == Brightness.dark;
+
+    final surfaceColor = isDark ? _surfaceDark : _surfaceLight;
+    final cardColor = isDark ? _cardDark : _cardLight;
+    final textPrimary = isDark ? _textPrimaryDark : _textPrimaryLight;
+    final textSecondary = isDark ? _textSecondaryDark : _textSecondaryLight;
+
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
-      scaffoldBackgroundColor: _surfaceDark,
-      colorScheme: const ColorScheme.dark(
+      brightness: brightness,
+      scaffoldBackgroundColor: surfaceColor,
+      colorScheme: ColorScheme(
+        brightness: brightness,
         primary: _primaryBlue,
-        secondary: Color(0xFF64B5F6),
-        surface: _cardDark,
+        secondary: const Color(0xFF64B5F6),
+        surface: cardColor,
         onPrimary: Colors.white,
-        onSurface: _textPrimary,
+        onSecondary: Colors.white,
+        onSurface: textPrimary,
+        error: Colors.redAccent,
+        onError: Colors.white,
       ),
       textTheme: GoogleFonts.dmSansTextTheme(
-        ThemeData.dark().textTheme,
+        isDark ? ThemeData.dark().textTheme : ThemeData.light().textTheme,
       ).copyWith(
         displayLarge: GoogleFonts.dmSans(
           fontSize: 72,
           fontWeight: FontWeight.w300,
-          color: Colors.white,
+          color: textPrimary,
           letterSpacing: -2,
-        ),
-        displayMedium: GoogleFonts.dmSans(
-          fontSize: 48,
-          fontWeight: FontWeight.w300,
-          color: Colors.white,
-          letterSpacing: -1,
         ),
         headlineLarge: GoogleFonts.dmSans(
           fontSize: 32,
           fontWeight: FontWeight.w600,
-          color: _textPrimary,
-        ),
-        headlineMedium: GoogleFonts.dmSans(
-          fontSize: 24,
-          fontWeight: FontWeight.w500,
-          color: _textPrimary,
+          color: textPrimary,
         ),
         titleLarge: GoogleFonts.dmSans(
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          color: _textPrimary,
+          color: textPrimary,
         ),
         titleMedium: GoogleFonts.dmSans(
           fontSize: 16,
           fontWeight: FontWeight.w500,
-          color: _textPrimary,
+          color: textPrimary,
         ),
-        bodyLarge: GoogleFonts.dmSans(
-          fontSize: 16,
-          color: _textPrimary,
-        ),
-        bodyMedium: GoogleFonts.dmSans(
-          fontSize: 14,
-          color: _textSecondary,
-        ),
+        bodyLarge: GoogleFonts.dmSans(fontSize: 16, color: textPrimary),
+        bodyMedium: GoogleFonts.dmSans(fontSize: 14, color: textSecondary),
         labelLarge: GoogleFonts.dmSans(
           fontSize: 12,
           fontWeight: FontWeight.w600,
-          color: _textSecondary,
+          color: textSecondary,
           letterSpacing: 0.8,
         ),
       ),
       cardTheme: CardThemeData(
-        color: _cardDark,
-        elevation: 0,
+        color: cardColor,
+        elevation: isDark ? 0 : 2,
+        shadowColor: Colors.black12,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: _cardDark,
+        fillColor: cardColor,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
         ),
-        hintStyle: GoogleFonts.dmSans(color: _textSecondary),
-        prefixIconColor: _textSecondary,
+        hintStyle: GoogleFonts.dmSans(color: textSecondary),
+        prefixIconColor: textSecondary,
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       ),
@@ -99,9 +105,9 @@ class AppTheme {
         titleTextStyle: GoogleFonts.dmSans(
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          color: _textPrimary,
+          color: textPrimary,
         ),
-        iconTheme: const IconThemeData(color: _textPrimary),
+        iconTheme: IconThemeData(color: textPrimary),
       ),
     );
   }

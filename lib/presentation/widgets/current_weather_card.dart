@@ -20,6 +20,7 @@ class CurrentWeatherCard extends StatelessWidget {
     final current = weather.current;
     final tempUnit = units == 'metric' ? '°C' : '°F';
     final code = current.weatherCode;
+    final isDay = current.isDay;
 
     return Container(
       width: double.infinity,
@@ -28,7 +29,7 @@ class CurrentWeatherCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: WeatherUtils.backgroundColors(code, current.isDay)
+          colors: WeatherUtils.backgroundColors(code, isDay)
               .map((c) => Color(c))
               .toList(),
         ),
@@ -59,9 +60,9 @@ class CurrentWeatherCard extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          // Big weather emoji
+          // Weather emoji — now day/night aware
           Text(
-            WeatherUtils.codeToEmoji(code),
+  WeatherUtils.codeToEmoji(code, isDay: isDay),
             style: const TextStyle(fontSize: 80),
           ).animate().scale(delay: 200.ms, duration: 400.ms),
 
@@ -78,9 +79,9 @@ class CurrentWeatherCard extends StatelessWidget {
             ),
           ).animate().fadeIn(delay: 300.ms),
 
-          // Description
+          // Description — now day/night aware
           Text(
-            WeatherUtils.codeToDescription(code),
+            WeatherUtils.codeToDescription(code, isDay: isDay),
             style: const TextStyle(
               fontSize: 20,
               color: Colors.white70,
@@ -108,7 +109,8 @@ class CurrentWeatherCard extends StatelessWidget {
               ),
               _StatChip(
                 icon: Icons.air,
-                label: '${current.windSpeed.round()} ${units == 'metric' ? 'km/h' : 'mph'}',
+                label:
+                    '${current.windSpeed.round()} ${units == 'metric' ? 'km/h' : 'mph'}',
                 sublabel: 'Wind',
               ),
               _StatChip(
