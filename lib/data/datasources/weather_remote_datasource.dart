@@ -1,6 +1,6 @@
-import 'package:skycast/core/constants/api_constants.dart';
-import 'package:skycast/core/network/api_client.dart';
-import 'package:skycast/data/models/weather_model.dart';
+import 'package:nimbus/core/constants/api_constants.dart';
+import 'package:nimbus/core/network/api_client.dart';
+import 'package:nimbus/data/models/weather_model.dart';
 
 abstract class WeatherRemoteDataSource {
   Future<WeatherResponseModel> getWeatherByCoords({
@@ -8,8 +8,6 @@ abstract class WeatherRemoteDataSource {
     required double lon,
     String units = 'metric',
     int days = 7,
-    String lang = 'en',
-    bool ai = false,
   });
 }
 
@@ -24,20 +22,16 @@ class WeatherRemoteDataSourceImpl implements WeatherRemoteDataSource {
     required double lon,
     String units = 'metric',
     int days = 7,
-    String lang = 'en',
-    bool ai = false,
   }) async {
-    final json = await _client.get(
+    final rawJson = await _client.get(
       ApiConstants.weatherEndpoint,
       queryParameters: {
         'lat': lat,
         'lon': lon,
         'days': days,
         'units': units,
-        'lang': lang,
-        'ai': ai,
       },
     );
-    return WeatherResponseModel.fromJson(json, null);
+    return WeatherResponseModel.fromJson(rawJson, null);
   }
 }

@@ -1,3 +1,27 @@
+// ignore_for_file: avoid_print
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+double _toDouble(dynamic v) {
+  if (v == null) return 0.0;
+  if (v is num) return v.toDouble();
+  return double.tryParse(v.toString()) ?? 0.0;
+}
+
+int _toInt(dynamic v) {
+  if (v == null) return 0;
+  if (v is num) return v.toInt();
+  return int.tryParse(v.toString()) ?? 0;
+}
+
+String _toStr(dynamic v) {
+  if (v == null) return '';
+  if (v is String) return v;
+  return v.toString();
+}
+
+// ─── Current ─────────────────────────────────────────────────────────────────
+
 class CurrentWeatherModel {
   final double temperature;
   final double feelsLike;
@@ -23,22 +47,29 @@ class CurrentWeatherModel {
     required this.time,
   });
 
-  factory CurrentWeatherModel.fromJson(Map<String, dynamic> json) {
-    final current = json['current'] as Map<String, dynamic>? ?? json;
+  factory CurrentWeatherModel.fromJson(dynamic raw) {
+    final c = raw is Map<String, dynamic> ? raw : <String, dynamic>{};
     return CurrentWeatherModel(
-      temperature: (current['temperature_2m'] ?? current['temperature'] ?? 0).toDouble(),
-      feelsLike: (current['apparent_temperature'] ?? current['feels_like'] ?? 0).toDouble(),
-      humidity: (current['relative_humidity_2m'] ?? current['humidity'] ?? 0).toInt(),
-      windSpeed: (current['wind_speed_10m'] ?? current['wind_speed'] ?? 0).toDouble(),
-      weatherCode: (current['weather_code'] ?? current['weathercode'] ?? 0).toInt(),
-      isDay: (current['is_day'] ?? 1) == 1,
-      uvIndex: (current['uv_index'] ?? 0).toDouble(),
-      precipitation: (current['precipitation'] ?? 0).toDouble(),
-      visibility: (current['visibility'] ?? 10000).toInt(),
-      time: current['time']?.toString() ?? DateTime.now().toIso8601String(),
+      temperature: _toDouble(
+          c['temp'] ?? c['temperature'] ?? c['temperature_2m'] ?? c['temp_c']),
+      feelsLike: _toDouble(
+          c['feels_like'] ?? c['feelsLike'] ?? c['apparent_temperature']),
+      humidity:
+          _toInt(c['humidity'] ?? c['humidity_pct'] ?? c['relative_humidity_2m']),
+      windSpeed: _toDouble(
+          c['wind'] ?? c['wind_kph'] ?? c['wind_speed'] ?? c['wind_speed_10m']),
+      weatherCode:
+          _toInt(c['weather_code'] ?? c['weathercode'] ?? c['weatherCode'] ?? 0),
+      isDay: _toInt(c['is_day'] ?? 1) == 1,
+      uvIndex: _toDouble(c['uv_index'] ?? c['uvIndex']),
+      precipitation: _toDouble(c['precipitation']),
+      visibility: _toInt(c['visibility']) == 0 ? 10000 : _toInt(c['visibility']),
+      time: _toStr(c['time'] ?? DateTime.now().toIso8601String()),
     );
   }
 }
+
+// ─── Daily ───────────────────────────────────────────────────────────────────
 
 class DailyForecastModel {
   final String date;
@@ -61,41 +92,57 @@ class DailyForecastModel {
     required this.sunset,
   });
 
-  factory DailyForecastModel.fromJson(Map<String, dynamic> json, int index) {
-    List<dynamic> getList(String key) =>
-        (json[key] as List<dynamic>?) ?? [];
-
-    final times = getList('time');
-    final tempMaxList = getList('temperature_2m_max');
-    final tempMinList = getList('temperature_2m_min');
-    final codes = getList('weather_code').isNotEmpty
-        ? getList('weather_code')
-        : getList('weathercode');
-    final precipProb = getList('precipitation_probability_max');
-    final uvMax = getList('uv_index_max');
-    final sunrises = getList('sunrise');
-    final sunsets = getList('sunset');
-
+  factory DailyForecastModel.fromMap(dynamic d) {
+    final m = d is Map<String, dynamic> ? d : <String, dynamic>{};
     return DailyForecastModel(
-      date: index < times.length ? times[index].toString() : '',
-      tempMax: index < tempMaxList.length ? (tempMaxList[index] ?? 0).toDouble() : 0,
-      tempMin: index < tempMinList.length ? (tempMinList[index] ?? 0).toDouble() : 0,
-      weatherCode: index < codes.length ? (codes[index] ?? 0).toInt() : 0,
-      precipitationProbability: index < precipProb.length ? (precipProb[index] ?? 0).toDouble() : 0,
-      uvIndexMax: index < uvMax.length ? (uvMax[index] ?? 0).toDouble() : 0,
-      sunrise: index < sunrises.length ? sunrises[index].toString() : '',
-      sunset: index < sunsets.length ? sunsets[index].toString() : '',
+      date: _toStr(m['date'] ?? m['day'] ?? m['time'] ?? m['dt_txt']),
+      tempMax: _toDouble(m['high'] ?? m['max'] ?? m['temp_max'] ??
+          m['temperature_max'] ?? m['maxtemp_c'] ?? m['temperature_2m_max']),
+      tempMin: _toDouble(m['low'] ?? m['min'] ?? m['temp_min'] ??
+          m['temperature_min'] ?? m['mintemp_c'] ?? m['temperature_2m_min']),
+      weatherCode: _toInt(
+          m['weather_code'] ?? m['weathercode'] ?? m['weatherCode'] ?? 0),
+      precipitationProbability: _toDouble(m['pop'] ?? m['precip_probability'] ??
+          m['chance_of_rain'] ?? m['precipitation_probability_max'] ??
+          m['precipitation_probability']),
+      uvIndexMax:
+          _toDouble(m['uv_index_max'] ?? m['uvIndex'] ?? m['uv_index']),
+      sunrise: _toStr(m['sunrise']),
+      sunset: _toStr(m['sunset']),
     );
   }
 
-  static List<DailyForecastModel> listFromJson(Map<String, dynamic> daily) {
-    final times = (daily['time'] as List<dynamic>?) ?? [];
-    return List.generate(
-      times.length,
-      (i) => DailyForecastModel.fromJson(daily, i),
-    );
+  static List<DailyForecastModel> listFromJson(dynamic raw) {
+    if (raw == null) return [];
+    if (raw is List) return raw.map(DailyForecastModel.fromMap).toList();
+    // columnar map format
+    if (raw is Map<String, dynamic>) {
+      final times = raw['time'];
+      if (times is List) {
+        return List.generate(times.length, (i) {
+          dynamic get(String key) {
+            final v = raw[key];
+            return v is List && i < v.length ? v[i] : null;
+          }
+          return DailyForecastModel(
+            date: _toStr(times[i]),
+            tempMax: _toDouble(get('temperature_2m_max') ?? get('temp_max')),
+            tempMin: _toDouble(get('temperature_2m_min') ?? get('temp_min')),
+            weatherCode: _toInt(get('weather_code') ?? get('weathercode')),
+            precipitationProbability:
+                _toDouble(get('precipitation_probability_max') ?? get('pop')),
+            uvIndexMax: _toDouble(get('uv_index_max')),
+            sunrise: _toStr(get('sunrise')),
+            sunset: _toStr(get('sunset')),
+          );
+        });
+      }
+    }
+    return [];
   }
 }
+
+// ─── Hourly ──────────────────────────────────────────────────────────────────
 
 class HourlyForecastModel {
   final String time;
@@ -114,36 +161,51 @@ class HourlyForecastModel {
     required this.precipitation,
   });
 
-  factory HourlyForecastModel.fromJson(Map<String, dynamic> hourly, int index) {
-    List<dynamic> getList(String key) => (hourly[key] as List<dynamic>?) ?? [];
-
-    final times = getList('time');
-    final temps = getList('temperature_2m');
-    final codes = getList('weather_code').isNotEmpty
-        ? getList('weather_code')
-        : getList('weathercode');
-    final humidity = getList('relative_humidity_2m');
-    final wind = getList('wind_speed_10m');
-    final precip = getList('precipitation');
-
+  factory HourlyForecastModel.fromMap(dynamic h) {
+    final m = h is Map<String, dynamic> ? h : <String, dynamic>{};
     return HourlyForecastModel(
-      time: index < times.length ? times[index].toString() : '',
-      temperature: index < temps.length ? (temps[index] ?? 0).toDouble() : 0,
-      weatherCode: index < codes.length ? (codes[index] ?? 0).toInt() : 0,
-      humidity: index < humidity.length ? (humidity[index] ?? 0).toInt() : 0,
-      windSpeed: index < wind.length ? (wind[index] ?? 0).toDouble() : 0,
-      precipitation: index < precip.length ? (precip[index] ?? 0).toDouble() : 0,
+      time: _toStr(m['time'] ?? m['dt_txt'] ?? m['hour']),
+      temperature: _toDouble(
+          m['temp'] ?? m['temperature'] ?? m['temp_c'] ?? m['temperature_2m']),
+      weatherCode: _toInt(
+          m['weather_code'] ?? m['weathercode'] ?? m['weatherCode'] ?? 0),
+      humidity:
+          _toInt(m['humidity'] ?? m['humidity_pct'] ?? m['relative_humidity_2m']),
+      windSpeed: _toDouble(
+          m['wind'] ?? m['wind_kph'] ?? m['wind_speed'] ?? m['wind_speed_10m']),
+      precipitation: _toDouble(m['precipitation'] ?? m['pop']),
     );
   }
 
-  static List<HourlyForecastModel> listFromJson(Map<String, dynamic> hourly) {
-    final times = (hourly['time'] as List<dynamic>?) ?? [];
-    return List.generate(
-      times.length,
-      (i) => HourlyForecastModel.fromJson(hourly, i),
-    );
+  static List<HourlyForecastModel> listFromJson(dynamic raw) {
+    if (raw == null) return [];
+    if (raw is List) return raw.map(HourlyForecastModel.fromMap).toList();
+    if (raw is Map<String, dynamic>) {
+      final times = raw['time'];
+      if (times is List) {
+        return List.generate(times.length, (i) {
+          dynamic get(String key) {
+            final v = raw[key];
+            return v is List && i < v.length ? v[i] : null;
+          }
+          return HourlyForecastModel(
+            time: _toStr(times[i]),
+            temperature:
+                _toDouble(get('temperature_2m') ?? get('temperature')),
+            weatherCode: _toInt(get('weather_code') ?? get('weathercode')),
+            humidity: _toInt(get('relative_humidity_2m') ?? get('humidity')),
+            windSpeed:
+                _toDouble(get('wind_speed_10m') ?? get('wind_speed')),
+            precipitation: _toDouble(get('precipitation')),
+          );
+        });
+      }
+    }
+    return [];
   }
 }
+
+// ─── Response ────────────────────────────────────────────────────────────────
 
 class WeatherResponseModel {
   final CurrentWeatherModel current;
@@ -166,30 +228,66 @@ class WeatherResponseModel {
     this.locationName,
   });
 
-  factory WeatherResponseModel.fromJson(
-      Map<String, dynamic> json, String? cityName) {
-    final currentJson = json['current'] as Map<String, dynamic>? ?? {};
-    final dailyJson = json['daily'] as Map<String, dynamic>? ?? {};
-    final hourlyJson = json['hourly'] as Map<String, dynamic>? ?? {};
+  factory WeatherResponseModel.fromJson(dynamic rawJson, String? cityName) {
+    try {
+      Map<String, dynamic> json;
+      if (rawJson is List && rawJson.isNotEmpty) {
+        json = rawJson.first is Map<String, dynamic>
+            ? rawJson.first as Map<String, dynamic>
+            : {};
+      } else if (rawJson is Map<String, dynamic>) {
+        json = rawJson;
+      } else {
+        print('[MODEL] Unexpected type: ${rawJson.runtimeType}');
+        json = {};
+      }
 
-    // AI summary can live at different paths
-    final aiSummary = json['ai_summary'] as String? ??
-        json['summary'] as String? ??
-        (json['ai'] as Map<String, dynamic>?)?['summary'] as String?;
+      print('[MODEL] Top-level keys: ${json.keys.toList()}');
+      print('[MODEL] current type: ${json['current'].runtimeType}');
+      print('[MODEL] daily type: ${json['daily'].runtimeType}');
+      print('[MODEL] hourly type: ${json['hourly'].runtimeType}');
 
-    return WeatherResponseModel(
-      current: CurrentWeatherModel.fromJson(currentJson.isNotEmpty
-          ? {'current': currentJson}
-          : json),
-      daily: DailyForecastModel.listFromJson(dailyJson),
-      hourly: HourlyForecastModel.listFromJson(hourlyJson),
-      aiSummary: aiSummary,
-      latitude: (json['latitude'] ?? 0).toDouble(),
-      longitude: (json['longitude'] ?? 0).toDouble(),
-      timezone: json['timezone'] as String?,
-      locationName: cityName ??
-          json['city'] as String? ??
-          json['location'] as String?,
-    );
+      // Extract location name — can be a String OR a Map
+      String? locationFromApi;
+      final locationRaw = json['location'];
+      if (locationRaw is String) {
+        locationFromApi = locationRaw;
+      } else if (locationRaw is Map) {
+        locationFromApi = _toStr(locationRaw['name'] ??
+            locationRaw['city'] ??
+            locationRaw['locality']);
+        if (locationFromApi!.isEmpty) locationFromApi = null;
+      }
+
+      // lat/lon can also be nested inside location map
+      double lat = _toDouble(json['latitude'] ?? json['lat']);
+      double lon = _toDouble(json['longitude'] ?? json['lon']);
+      if (lat == 0.0 && locationRaw is Map) {
+        lat = _toDouble(locationRaw['lat'] ?? locationRaw['latitude']);
+        lon = _toDouble(locationRaw['lon'] ?? locationRaw['longitude']);
+      }
+
+      // AI summary
+      final aiSummary = json['ai_summary'] as String? ??
+          json['summary'] as String? ??
+          json['aiSummary'] as String? ??
+          json['insights'] as String? ??
+          (json['ai'] is Map ? _toStr((json['ai'] as Map)['summary']) : null);
+
+      return WeatherResponseModel(
+        current: CurrentWeatherModel.fromJson(json['current'] ?? json),
+        daily: DailyForecastModel.listFromJson(json['daily']),
+        hourly: HourlyForecastModel.listFromJson(json['hourly']),
+        aiSummary: aiSummary?.isNotEmpty == true ? aiSummary : null,
+        latitude: lat,
+        longitude: lon,
+        timezone: json['timezone'] as String?,
+        locationName: cityName ?? locationFromApi,
+      );
+    } catch (e, stack) {
+      print('[MODEL] Parse error: $e');
+      print('[MODEL] Stack: $stack');
+      rethrow;
+    }
   }
 }

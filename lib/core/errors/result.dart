@@ -1,4 +1,4 @@
-import 'package:skycast/core/errors/exceptions.dart';
+import 'package:nimbus/core/errors/exceptions.dart';
 
 sealed class Result<T> {
   const Result();

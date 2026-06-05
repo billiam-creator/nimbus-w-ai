@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:skycast/core/errors/exceptions.dart';
-import 'package:skycast/core/errors/result.dart';
-import 'package:skycast/data/models/weather_model.dart';
+import 'package:nimbus/core/errors/exceptions.dart';
+import 'package:nimbus/core/errors/result.dart';
+import 'package:nimbus/data/models/weather_model.dart';
 
 void main() {
   group('Result<T>', () {

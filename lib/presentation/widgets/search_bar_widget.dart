@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:skycast/presentation/providers/weather_provider.dart';
+import 'package:nimbus/presentation/providers/weather_provider.dart';
 
 class SearchBar extends ConsumerStatefulWidget {
   const SearchBar({super.key});

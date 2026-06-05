@@ -1,6 +1,6 @@
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:skycast/core/errors/exceptions.dart';
+import 'package:nimbus/core/errors/exceptions.dart';
 
 class LocationUtils {
   LocationUtils._();

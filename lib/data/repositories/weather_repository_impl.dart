@@ -1,8 +1,8 @@
-import 'package:skycast/core/errors/exceptions.dart';
-import 'package:skycast/core/errors/result.dart';
-import 'package:skycast/core/utils/location_utils.dart';
-import 'package:skycast/data/datasources/weather_remote_datasource.dart';
-import 'package:skycast/data/models/weather_model.dart';
+import 'package:nimbus/core/errors/exceptions.dart';
+import 'package:nimbus/core/errors/result.dart';
+import 'package:nimbus/core/utils/location_utils.dart';
+import 'package:nimbus/data/datasources/weather_remote_datasource.dart';
+import 'package:nimbus/data/models/weather_model.dart';
 
 abstract class WeatherRepository {
   Future<Result<WeatherResponseModel>> getWeatherByCoords({
@@ -11,7 +11,6 @@ abstract class WeatherRepository {
     String units,
     int days,
   });
-
   Future<Result<WeatherResponseModel>> getWeatherByCity(String cityName);
   Future<Result<WeatherResponseModel>> getWeatherByLocation();
 }
@@ -34,7 +33,6 @@ class WeatherRepositoryImpl implements WeatherRepository {
         lon: lon,
         units: units,
         days: days,
-        ai: false,
       );
       return Success(result);
     } on AppException catch (e) {
@@ -51,7 +49,6 @@ class WeatherRepositoryImpl implements WeatherRepository {
       final json = await _remote.getWeatherByCoords(
         lat: coords.lat,
         lon: coords.lon,
-        ai: false,
       );
       final enriched = WeatherResponseModel(
         current: json.current,

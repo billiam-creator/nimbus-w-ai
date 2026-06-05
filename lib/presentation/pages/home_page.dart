@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:skycast/presentation/providers/weather_provider.dart';
-import 'package:skycast/presentation/widgets/ai_summary_card.dart';
-import 'package:skycast/presentation/widgets/current_weather_card.dart';
-import 'package:skycast/presentation/widgets/daily_forecast_section.dart';
-import 'package:skycast/presentation/widgets/hourly_forecast_section.dart';
-import 'package:skycast/presentation/widgets/loading_skeleton.dart';
-import 'package:skycast/presentation/widgets/search_bar_widget.dart'
+import 'package:nimbus/presentation/providers/weather_provider.dart';
+import 'package:nimbus/presentation/widgets/ai_summary_card.dart';
+import 'package:nimbus/presentation/widgets/current_weather_card.dart';
+import 'package:nimbus/presentation/widgets/daily_forecast_section.dart';
+import 'package:nimbus/presentation/widgets/hourly_forecast_section.dart';
+import 'package:nimbus/presentation/widgets/loading_skeleton.dart';
+import 'package:nimbus/presentation/widgets/search_bar_widget.dart'
     as search;
 
 class HomePage extends ConsumerStatefulWidget {

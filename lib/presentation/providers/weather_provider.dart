@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:skycast/core/network/api_client.dart';
-import 'package:skycast/data/datasources/weather_remote_datasource.dart';
-import 'package:skycast/data/models/weather_model.dart';
-import 'package:skycast/data/repositories/weather_repository_impl.dart';
-import 'package:skycast/core/errors/result.dart';
+import 'package:nimbus/core/network/api_client.dart';
+import 'package:nimbus/data/datasources/weather_remote_datasource.dart';
+import 'package:nimbus/data/models/weather_model.dart';
+import 'package:nimbus/data/repositories/weather_repository_impl.dart';
+import 'package:nimbus/core/errors/result.dart';
 
 // ─── Infrastructure ───────────────────────────────────────────────────────────
 

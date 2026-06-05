@@ -1,4 +1,4 @@
-name: skycast
+name: nimbus
 description: A weather app powered by WeatherAI API
 publish_to: 'none'
 version: 1.0.0+1

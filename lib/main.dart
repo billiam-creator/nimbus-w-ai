@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:skycast/presentation/pages/home_page.dart';
-import 'package:skycast/presentation/theme/app_theme.dart';
+import 'package:nimbus/presentation/pages/home_page.dart';
+import 'package:nimbus/presentation/theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

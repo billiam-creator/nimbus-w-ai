@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:skycast/core/constants/api_constants.dart';
-import 'package:skycast/core/errors/exceptions.dart';
+import 'package:nimbus/core/constants/api_constants.dart';
+import 'package:nimbus/core/errors/exceptions.dart';
 
 class ApiClient {
   late final Dio _dio;
@@ -10,11 +9,12 @@ class ApiClient {
     _dio = Dio(
       BaseOptions(
         baseUrl: ApiConstants.baseUrl,
-        connectTimeout: const Duration(seconds: 10),
-        receiveTimeout: const Duration(seconds: 15),
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 20),
         headers: {
-          'Authorization': 'Bearer ${dotenv.env['WEATHER_AI_KEY']}',
+          'Authorization': 'Bearer ${ApiConstants.apiKey}',
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
         },
       ),
     );
@@ -22,7 +22,6 @@ class ApiClient {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          // Log requests in debug
           assert(() {
             // ignore: avoid_print
             print('[API] ${options.method} ${options.path} params:${options.queryParameters}');
@@ -30,29 +29,24 @@ class ApiClient {
           }());
           handler.next(options);
         },
-        onResponse: (response, handler) {
-          handler.next(response);
-        },
         onError: (error, handler) {
-        print('[API ERROR] status: ${error.response?.statusCode}');
-        print('[API ERROR] data: ${error.response?.data}');
-        print('[API ERROR] url: ${error.requestOptions.uri}');
-  handler.next(error);
-},
+          // ignore: avoid_print
+          print('[API ERROR] status: ${error.response?.statusCode}');
+          // ignore: avoid_print
+          print('[API ERROR] data: ${error.response?.data}');
+          handler.next(error);
+        },
       ),
     );
   }
 
-  Future<Map<String, dynamic>> get(
+  Future<dynamic> get(
     String path, {
     Map<String, dynamic>? queryParameters,
   }) async {
     try {
-      final response = await _dio.get(
-        path,
-        queryParameters: queryParameters,
-      );
-      return response.data as Map<String, dynamic>;
+      final response = await _dio.get(path, queryParameters: queryParameters);
+      return response.data;
     } on DioException catch (e) {
       throw _mapDioError(e);
     }
@@ -71,7 +65,9 @@ class ApiClient {
         final body = e.response?.data;
         if (statusCode == 401) return const UnauthorizedException();
         if (statusCode == 429) return const RateLimitException();
-        final message = body is Map ? (body['message'] ?? 'Server error') : 'Server error';
+        final message = body is Map
+            ? (body['message'] ?? body['error'] ?? 'Server error')
+            : 'Server error ($statusCode)';
         return ServerException(message.toString(), statusCode: statusCode);
       default:
         return ServerException(e.message ?? 'An unexpected error occurred.');

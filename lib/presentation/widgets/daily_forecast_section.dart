@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:skycast/core/utils/weather_utils.dart';
-import 'package:skycast/data/models/weather_model.dart';
+import 'package:nimbus/core/utils/weather_utils.dart';
+import 'package:nimbus/data/models/weather_model.dart';
 
 class DailyForecastSection extends StatelessWidget {
   final List<DailyForecastModel> forecast;

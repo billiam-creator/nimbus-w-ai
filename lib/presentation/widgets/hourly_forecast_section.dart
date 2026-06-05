@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:skycast/core/utils/weather_utils.dart';
-import 'package:skycast/data/models/weather_model.dart';
+import 'package:nimbus/core/utils/weather_utils.dart';
+import 'package:nimbus/data/models/weather_model.dart';
 
 class HourlyForecastSection extends StatelessWidget {
   final List<HourlyForecastModel> hourly;
