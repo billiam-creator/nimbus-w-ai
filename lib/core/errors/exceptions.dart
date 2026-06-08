@@ -7,8 +7,13 @@ abstract class AppException implements Exception {
 }
 
 class NetworkException extends AppException {
-  const NetworkException([String message = 'No internet connection.'])
+  const NetworkException([String message = 'No internet connection. Please check your network and try again.'])
       : super(message);
+}
+
+class TimeoutException extends AppException {
+  const TimeoutException()
+      : super('Request timed out. Your connection may be slow — please try again.');
 }
 
 class ServerException extends AppException {
@@ -18,15 +23,16 @@ class ServerException extends AppException {
 
 class UnauthorizedException extends AppException {
   const UnauthorizedException()
-      : super('Invalid API key. Check your .env file.');
+      : super('Invalid API key. Please check your configuration.');
 }
 
 class RateLimitException extends AppException {
-  const RateLimitException() : super('Monthly quota exceeded. Upgrade your plan.');
+  const RateLimitException()
+      : super('Monthly request quota exceeded. Please upgrade your plan.');
 }
 
 class LocationException extends AppException {
-  const LocationException([String message = 'Unable to get your location.'])
+  const LocationException([String message = 'Unable to get your location. Please enable location permissions.'])
       : super(message);
 }
 

@@ -49,15 +49,19 @@ class ApiClient {
       return response.data;
     } on DioException catch (e) {
       throw _mapDioError(e);
+    } catch (e) {
+      throw ServerException('An unexpected error occurred. Please try again.');
     }
   }
 
   AppException _mapDioError(DioException e) {
     switch (e.type) {
       case DioExceptionType.connectionTimeout:
+        return const TimeoutException();
       case DioExceptionType.receiveTimeout:
+        return const TimeoutException();
       case DioExceptionType.sendTimeout:
-        return const NetworkException('Request timed out. Check your connection.');
+        return const TimeoutException();
       case DioExceptionType.connectionError:
         return const NetworkException();
       case DioExceptionType.badResponse:
@@ -65,12 +69,27 @@ class ApiClient {
         final body = e.response?.data;
         if (statusCode == 401) return const UnauthorizedException();
         if (statusCode == 429) return const RateLimitException();
+        if (statusCode == 500) {
+          return const ServerException(
+            'WeatherAI server error. Please try again in a moment.',
+            statusCode: 500,
+          );
+        }
+        if (statusCode == 503) {
+          return const ServerException(
+            'WeatherAI service is temporarily unavailable. Please try again later.',
+            statusCode: 503,
+          );
+        }
         final message = body is Map
-            ? (body['message'] ?? body['error'] ?? 'Server error')
-            : 'Server error ($statusCode)';
+            ? (body['message'] ?? body['error'] ?? 'Something went wrong.')
+            : 'Something went wrong (error $statusCode).';
         return ServerException(message.toString(), statusCode: statusCode);
+      case DioExceptionType.cancel:
+        return const ServerException('Request was cancelled.');
       default:
-        return ServerException(e.message ?? 'An unexpected error occurred.');
+        return const NetworkException(
+            'Unable to reach the server. Check your internet connection.');
     }
   }
 }

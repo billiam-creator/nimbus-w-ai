@@ -135,25 +135,78 @@ class _ErrorView extends StatelessWidget {
 
   const _ErrorView({required this.message, required this.onRetry});
 
+  String get _emoji {
+    if (message.contains('internet') || message.contains('network') || message.contains('reach')) {
+      return '📡';
+    }
+    if (message.contains('timed out') || message.contains('slow')) {
+      return '⏱️';
+    }
+    if (message.contains('server') || message.contains('unavailable')) {
+      return '🌩️';
+    }
+    if (message.contains('location') || message.contains('permission')) {
+      return '📍';
+    }
+    if (message.contains('API key') || message.contains('Invalid')) {
+      return '🔑';
+    }
+    if (message.contains('quota') || message.contains('limit')) {
+      return '📊';
+    }
+    return '⛈️';
+  }
+
+  String get _title {
+    if (message.contains('internet') || message.contains('network') || message.contains('reach')) {
+      return 'No Connection';
+    }
+    if (message.contains('timed out') || message.contains('slow')) {
+      return 'Connection Timeout';
+    }
+    if (message.contains('server') || message.contains('unavailable')) {
+      return 'Server Error';
+    }
+    if (message.contains('location') || message.contains('permission')) {
+      return 'Location Unavailable';
+    }
+    if (message.contains('API key') || message.contains('Invalid')) {
+      return 'Configuration Error';
+    }
+    if (message.contains('quota') || message.contains('limit')) {
+      return 'Quota Exceeded';
+    }
+    return 'Something Went Wrong';
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDark ? Colors.white70 : Colors.black54;
+    final titleColor = isDark ? Colors.white : Colors.black87;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('⛈️', style: TextStyle(fontSize: 64))
+            Text(_emoji, style: const TextStyle(fontSize: 64))
                 .animate()
                 .scale(duration: 400.ms),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
+            Text(
+              _title,
+              style: TextStyle(
+                color: titleColor,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 12),
             Text(
               message,
-              style: TextStyle(
-                color: isDark ? Colors.white70 : Colors.black54,
-                fontSize: 16,
-              ),
+              style: TextStyle(color: textColor, fontSize: 14, height: 1.5),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 32),
