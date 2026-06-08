@@ -8,6 +8,7 @@ import 'package:nimbus/presentation/widgets/daily_forecast_section.dart';
 import 'package:nimbus/presentation/widgets/hourly_forecast_section.dart';
 import 'package:nimbus/presentation/widgets/loading_skeleton.dart';
 import 'package:nimbus/presentation/widgets/search_bar_widget.dart' as search;
+import 'package:nimbus/presentation/widgets/weather_alert_banner.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -89,6 +90,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                   locationLabel: state.locationLabel ?? 'Your Location',
                   units: state.units,
                 ),
+                
+                WeatherAlertBanner(
+                    weather: weather,
+                    units: state.units,
+                       ),
 
                 // AI Summary
                 if (weather.aiSummary != null &&
